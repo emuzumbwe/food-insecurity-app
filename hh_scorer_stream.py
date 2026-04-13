@@ -212,7 +212,7 @@ if file:
 
     # -------- CHOROPLETH MAP -------- #
 
-    st.subheader("🗺️ Zambia Food Insecurity Map")
+    st.subheader("🗺️ Average Food Insecurity Risk by Province")
 
     # Load GeoJSON
     with open("zambia_provinces.geojson") as f:
@@ -242,10 +242,3 @@ if file:
         "scored_results.csv",
         "text/csv"
     )
-
-
-#run in terminal using: 
-# cd "D:\SCHOOL\Data Science\ZCAS\Computing Project\Model\Deployment"
-# streamlit run hh_scorer_stream.py
-# Then browser:
-# http://localhost:8501
