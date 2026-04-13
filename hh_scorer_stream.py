@@ -1,6 +1,8 @@
 import streamlit as st
 import joblib
 import pandas as pd
+import json
+import plotly.express as px
 
 # -------- LOAD MODEL -------- #
 model = joblib.load("model.pkl")
@@ -207,6 +209,32 @@ if file:
     st.success("Scoring complete!")
 
     st.dataframe(df.head())
+
+    # -------- CHOROPLETH MAP -------- #
+
+    st.subheader("🗺️ Zambia Food Insecurity Map")
+
+    # Load GeoJSON
+    with open("zambia_provinces.geojson") as f:
+        geojson = json.load(f)
+
+    # Aggregate data
+    map_df = df.groupby("Province")["RiskScore"].mean().reset_index()
+
+    # Create map
+    fig = px.choropleth(
+        map_df,
+        geojson=geojson,
+        locations="Province",
+        featureidkey="properties.name",  # must match geojson names
+        color="RiskScore",
+        color_continuous_scale="Reds",
+        title="Average Food Insecurity Risk by Province"
+    )
+
+    fig.update_geos(fitbounds="locations", visible=False)
+
+    st.plotly_chart(fig, use_container_width=True)
 
     st.download_button(
         "Download Results",
