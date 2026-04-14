@@ -178,7 +178,8 @@ if st.button("Predict"):
 
     color = "green" if risk_category == "Low" else "orange" if risk_category == "Medium" else "red"
 
-    st.markdown(f"### Food Insecure: **{food_insecure}**")
+    status = "Insecure" if food_insecure == 1 else "Secure"
+    st.markdown(f"### Food Security Status: **{status}**")
     st.markdown(f"### Risk Score: **{round(risk_score,4)}**")
     st.markdown(f"### Risk Category: <span style='color:{color}; font-size:24px'><b>{risk_category}</b></span>", unsafe_allow_html=True)
 
@@ -200,7 +201,7 @@ if file:
 
     risk_scores = model.predict_proba(X)[:, 1]
 
-    df["FoodInsecure"] = (risk_scores >= threshold).astype(int)
+    df["FoodInsecure"] = (risk_scores >= threshold).map({True: "Insecure", False: "Secure"})
     df["RiskScore"] = risk_scores
     df["RiskCategory"] = df["RiskScore"].apply(
         lambda x: categorize_risk(x, threshold)
@@ -215,8 +216,11 @@ if file:
     st.subheader("🗺️ Average Food Insecurity Risk by Province")
 
     # Load GeoJSON
-    with open("zambia_provinces.geojson") as f:
-        geojson = json.load(f)
+    try:
+        with open("zambia_provinces.geojson") as f:
+            geojson = json.load(f)
+    except:
+        st.error("GeoJSON file not found. Please upload zambia_provinces.geojson")
 
     # Aggregate data
     map_df = df.groupby("Province")["RiskScore"].mean().reset_index()
