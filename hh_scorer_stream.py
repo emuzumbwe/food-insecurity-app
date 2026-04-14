@@ -179,7 +179,12 @@ if st.button("Predict"):
     color = "green" if risk_category == "Low" else "orange" if risk_category == "Medium" else "red"
 
     status = "Insecure" if food_insecure == 1 else "Secure"
-    st.markdown(f"### Food Security Status: **{status}**")
+    status_color = "red" if status == "Insecure" else "green"
+    
+    st.markdown(
+        f"### Food Security Status: <span style='color:{status_color}; font-size:24px'><b>{status}</b></span>",
+        unsafe_allow_html=True
+    )
     st.markdown(f"### Risk Score: **{round(risk_score,4)}**")
     st.markdown(f"### Risk Category: <span style='color:{color}; font-size:24px'><b>{risk_category}</b></span>", unsafe_allow_html=True)
 
