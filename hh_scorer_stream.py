@@ -10,6 +10,7 @@ columns = joblib.load("modelcolumns.pkl")
 threshold = joblib.load("threshold.pkl")
 
 
+
 # -------- HELPER FUNCTIONS -------- #
 def prepare_data(df, feature_columns):
     X = df.copy()
@@ -171,6 +172,7 @@ if st.button("Predict"):
     X = prepare_data(df, columns)
 
     risk_score = model.predict_proba(X)[:, 1][0]
+
     food_insecure = int(risk_score >= threshold)
     risk_category = categorize_risk(risk_score, threshold)
 
@@ -178,15 +180,14 @@ if st.button("Predict"):
 
     color = "green" if risk_category == "Low" else "orange" if risk_category == "Medium" else "red"
 
-    status = "Insecure" if food_insecure == 1 else "Secure"
-    status_color = "red" if status == "Insecure" else "green"
-    
+    food_status = "🔴 Insecure" if food_insecure == 1 else "🟢 Secure"
+
+    st.markdown(f"### Food Security Status: **{food_status}**")
+    st.markdown(f"### Risk Score: **{round(risk_score,4)}**")
     st.markdown(
-        f"### Food Security Status: <span style='color:{status_color}; font-size:24px'><b>{status}</b></span>",
+        f"### Risk Category: <span style='color:{color}; font-size:24px'><b>{risk_category}</b></span>",
         unsafe_allow_html=True
     )
-    st.markdown(f"### Risk Score: **{round(risk_score,4)}**")
-    st.markdown(f"### Risk Category: <span style='color:{color}; font-size:24px'><b>{risk_category}</b></span>", unsafe_allow_html=True)
 
 
 # -------- FILE UPLOAD (BATCH) -------- #
@@ -206,45 +207,32 @@ if file:
 
     risk_scores = model.predict_proba(X)[:, 1]
 
-    df["FoodInsecure"] = (risk_scores >= threshold).map({True: "Insecure", False: "Secure"})
+    # Plain text version (for download)
+    df["FoodStatus"] = pd.Series(risk_scores >= threshold).map({
+        True: "Insecure",
+        False: "Secure"
+    })
+
     df["RiskScore"] = risk_scores
+
     df["RiskCategory"] = df["RiskScore"].apply(
         lambda x: categorize_risk(x, threshold)
     )
 
     st.success("Scoring complete!")
 
-    st.dataframe(df.head())
+    # Streamlit display copy with emojis
+    display_df = df.copy()
 
-    # -------- CHOROPLETH MAP -------- #
+    display_df["FoodStatus"] = display_df["FoodStatus"].map({
+        "Insecure": "🔴 Insecure",
+        "Secure": "🟢 Secure"
+    })
 
-    st.subheader("🗺️ Average Food Insecurity Risk by Province")
+    # Show emoji version on screen
+    st.dataframe(display_df.head())
 
-    # Load GeoJSON
-    try:
-        with open("zambia_provinces.geojson") as f:
-            geojson = json.load(f)
-    except:
-        st.error("GeoJSON file not found. Please upload zambia_provinces.geojson")
-
-    # Aggregate data
-    map_df = df.groupby("Province")["RiskScore"].mean().reset_index()
-
-    # Create map
-    fig = px.choropleth(
-        map_df,
-        geojson=geojson,
-        locations="Province",
-        featureidkey="properties.name",  # must match geojson names
-        color="RiskScore",
-        color_continuous_scale="Reds",
-        title="Average Food Insecurity Risk by Province"
-    )
-
-    fig.update_geos(fitbounds="locations", visible=False)
-
-    st.plotly_chart(fig, use_container_width=True)
-
+    # Download plain-text version
     st.download_button(
         "Download Results",
         df.to_csv(index=False),
