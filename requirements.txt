@@ -1,11 +1,6 @@
 streamlit
-pandas==2.2.3
-numpy==2.2.2
-scikit-learn==1.8.0
-joblib==1.4.2
+pandas
+scikit-learn
+joblib
 plotly
 openpyxl
-xgboost==3.2.0
-lightgbm==4.6.0
-catboost==1.2.10
-imbalanced-learn==0.14.1
